@@ -1,6 +1,5 @@
 import collections
 import itertools
-import random
 
 import arcpy
 
@@ -18,40 +17,13 @@ def build_graph(feature_class, id_field="OID@"):
                 graph[s2[1]]
     return graph
 
-def greedy_color(graph, colors, invalidate_neighbors):
+def traverse_graph(graph):
+    colors = { id: 0 for id in graph }
     for n_id, links in sorted(graph.items(), key=lambda x: (x[0], -len(x[1]))):
         color = colors[n_id]
         while color == 0 or any( (colors[link] == color) for link in links):
             color += 1
         colors[n_id] = color
-        if colors[n_id] >= 5:
-            if invalidate_neighbors:
-                colors[n_id] = 0
-                for neighbor in graph[n_id]:
-                    colors[neighbor] = 0
-
-def traverse_graph(graph):
-    colors = { id: 0 for id in graph }
-    greedy_color(graph, colors, True)
-    num_tries = 1
-    while any(color == 0 for color in colors.values()) and num_tries <= len(colors):
-        arcpy.AddMessage("Repainting ({} of {})".format(num_tries, len(colors)))
-        items = list(graph.items())
-        random.shuffle(items)
-        for n_id, links in items:
-            if colors[n_id] == 0:
-                color = 4
-                while color > 0 or any((colors[link] == color) for link in links):
-                    color -= 1
-                if color <= 0:
-                    color = 0
-                    for neighbor in graph[n_id]:
-                        colors[neighbor] = 0
-                colors[n_id] = color
-        num_tries += 1
-
-    if any(color == 0 for color in colors.values()):
-        greedy_color(graph, colors, False)
     return colors
 
 def color_feature_class(feature_class, field_to_populate, coloring,
