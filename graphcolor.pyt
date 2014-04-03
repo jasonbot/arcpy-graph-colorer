@@ -26,12 +26,17 @@ class GraphColorTool(object):
                                       direction="Input",
                                       datatype="GPFeatureLayer")
 
-        input_field = arcpy.Parameter(name="summary_field", 
-                                      displayName="Input Field",
+        id_field = arcpy.Parameter(name="id_field", 
+                                   displayName="ID Field",
+                                   direction="Input",
+                                   datatype="GPString")
+
+        input_field = arcpy.Parameter(name="color_field", 
+                                      displayName="Color Field to Populate",
                                       direction="Input",
                                       datatype="GPString")
 
-        params = [input_layer, input_field]
+        params = [input_layer, id_field, input_field]
         return params
 
     def isLicensed(self):
@@ -44,8 +49,14 @@ class GraphColorTool(object):
         has been changed."""
         if parameters[0].value:
             fc = parameters[0].value
-            parameters[1].filter.list = [f.name
-                                         for f in arcpy.ListFields(fc)
+            fields = arcpy.ListFields(fc)
+            parameters[1].filter.list = [f.name for f in fields]
+            if not params[1].value:
+                params[1].value = getattr(arcpy.Describe(fc),
+                                          'OIDFieldName',
+                                          None) or ''
+            parameters[2].filter.list = [f.name
+                                         for f in fields 
                                          if f.type.lower() in ('double',
                                                                'smallinteger',
                                                                'integer')]
@@ -61,4 +72,5 @@ class GraphColorTool(object):
                                       [os.path.dirname(__file__)])
         graph_color = imp.load_module('graph_color', *module_info)
         graph_color.graph_color(parameters[0].valueAsText,
-                                parameters[1].valueAsText)
+                                parameters[1].valueAsText,
+                                parameters[2].valueAsText)

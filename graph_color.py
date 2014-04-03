@@ -34,7 +34,7 @@ def color_feature_class(feature_class, field_to_populate, coloring,
             row[1] = coloring.get(row[0], 1)
             cur.updateRow(row)
 
-def graph_color(feature_class, field_to_populate, id_field="OID@"):
+def graph_color(feature_class, id_field, field_to_populate):
     arcpy.AddMessage("Building graph")
     graph = build_graph(feature_class, id_field)
 
@@ -46,4 +46,5 @@ def graph_color(feature_class, field_to_populate, id_field="OID@"):
 
 if __name__ == '__main__':
     test = graph_color(arcpy.GetParameterAsText(0),
-                       arcpy.GetParameterAsText(1))
+                       arcpy.GetParameterAsText(1),
+                       arcpy.GetParameterAsText(2))
